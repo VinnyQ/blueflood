@@ -162,9 +162,11 @@ public class AstyanaxWriter extends AstyanaxIO {
     }
 
     private final void insertEnumValuesWithHashcodes(Locator locator, BluefloodEnumRollup rollup, MutationBatch mutationBatch) {
+        Timer.Context ctx = Instrumentation.getWriteTimerContext(CassandraModel.CF_METRICS_ENUM);
         for(String valueName : rollup.getStringEnumValuesWithCounts().keySet()) {
             mutationBatch.withRow(CassandraModel.CF_METRICS_ENUM, locator).putColumn((long)valueName.hashCode(), valueName);
         }
+        ctx.stop();
     }
 
     private void insertMetric(Metric metric, MutationBatch mutationBatch) {

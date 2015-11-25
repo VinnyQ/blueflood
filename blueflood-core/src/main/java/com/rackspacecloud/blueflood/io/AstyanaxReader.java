@@ -464,7 +464,7 @@ public class AstyanaxReader extends AstyanaxIO {
         return metricDataMap.get(locator);
     }
 
-    public  Map<Locator, MetricData> getEnumMetricDataForRangeForLocatorList(final List<Locator> locator, final Range range, final Granularity gran) {
+    public Map<Locator, MetricData> getEnumMetricDataForRangeForLocatorList(final List<Locator> locator, final Range range, final Granularity gran) {
         final ColumnFamily<Locator, Long> CF = CassandraModel.getColumnFamily(RollupType.classOf(RollupType.ENUM, gran), gran);
 
         Future<Map<Locator, ColumnList<Long>>> enumValuesFuture = taskExecutor.submit(new Callable() {
@@ -658,6 +658,7 @@ public class AstyanaxReader extends AstyanaxIO {
     }
 
     public Map<Locator, ColumnList<Long>> getEnumHashMappings(final List<Locator> locators) {
+        Timer.Context ctx = Instrumentation.getReadTimerContext(CassandraModel.CF_METRICS_ENUM);
         final Map<Locator, ColumnList<Long>> columns = new HashMap<Locator, ColumnList<Long>>();
 
         try {
@@ -676,6 +677,9 @@ public class AstyanaxReader extends AstyanaxIO {
                 log.warn("Enum read query failed for column family " + CassandraModel.CF_METRICS_ENUM.getName(), e);
                 Instrumentation.markReadError(e);
             }
+        }
+        finally {
+            ctx.stop();
         }
         return columns;
     }

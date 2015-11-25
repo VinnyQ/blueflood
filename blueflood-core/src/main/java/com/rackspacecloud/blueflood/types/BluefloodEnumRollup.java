@@ -1,11 +1,15 @@
 package com.rackspacecloud.blueflood.types;
 
+import com.codahale.metrics.Timer;
+import com.rackspacecloud.blueflood.utils.Metrics;
+
 import java.io.IOException;
 import java.util.*;
 
 public class BluefloodEnumRollup implements Rollup {
     private Map<String, Long> stringEnumValues2Count = new HashMap<String, Long>();
     private Map<Long,Long> hashedEnumValues2Count = new HashMap<Long, Long>();
+    private static final Timer enumRollupTimer = Metrics.timer(BluefloodEnumRollup.class, "Enums Rollup Duration");
 
     public BluefloodEnumRollup withEnumValue(String valueName) {
         return this.withEnumValue(valueName, 1L);
@@ -75,6 +79,7 @@ public class BluefloodEnumRollup implements Rollup {
     }
 
     public static BluefloodEnumRollup buildRollupFromEnumRollups(Points<BluefloodEnumRollup> input) throws IOException {
+        Timer.Context enumRollupTimerCtx = enumRollupTimer.time();
         BluefloodEnumRollup enumRollup = new BluefloodEnumRollup();
         Map<Long, Long> currentHashedEnums = enumRollup.getHashedEnumValuesWithCounts();
 
@@ -91,6 +96,7 @@ public class BluefloodEnumRollup implements Rollup {
             }
         }
 
+        enumRollupTimerCtx.stop();
         return enumRollup;
     }
 
